@@ -21,10 +21,31 @@
         //Sketching the lines between the points
         const ctx = myCanvas.getContext('2d');
 
-        let t=-1;
+        // To try other angles of A-B using the mouse to try various other posibilities of the intersection
+        let angle=0;
+        // To allow moving the points using the mouse to try various other posibilities of the intersection
+        const mouse = { x: 0, y: 0 };
+        document.onmousemove = event => {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        }
+
+        let t=50;
         animate();
 
         function animate(){
+
+            const radius = 50;
+            // A will be 50px above the mouse, B will be 50px below the mouse
+            // Adding the sin and cos would make the points move in a circle => bottom is 0 when both A-B & C-D are parallel
+
+            A.x = mouse.x+Math.cos(angle)*radius;
+            A.y = mouse.y-Math.sin(angle)*radius;
+            B.x = mouse.x-Math.cos(angle)*radius;
+            B.y = mouse.y+Math.sin(angle)*radius;
+            // While the angle values are changing in this way, and angles are all in radians, & the numbers are represented as floating point numbers with some number of digits with no full accuracy there, so the values will never be exactly 0, so the bottom will never be exactly 0, so the system will never break.
+            angle += 0.02;
+
             ctx.clearRect(0,0,myCanvas.width,myCanvas.height);
             
             ctx.beginPath();
@@ -39,25 +60,16 @@
             markPoints(B,"B");
             markPoints(C,"C");
             markPoints(D,"D");
-    
-            
-            const M1 = { 
-                x: lerp(A.x, B.x, t),  // 50% or 1/2 or 0.5, means the midpoint of A and B
-                y: lerp(A.y, B.y, t) 
-            };
-            const M2 = { 
-                x: lerp(C.x, D.x, t),  // 50% or 1/2 or 0.5, means the midpoint of A and B
-                y: lerp(C.y, D.y, t) 
-            };
-            
-            // Calculating the mid-point of both the lines using interpolation
-            markPoints(M1,"M1", t<0||t>1);
-            markPoints(M2,"M2", t<0||t>1);
-            t+=0.005;
 
             // Calculating the Intersection of the lines
             const I = getIntersection(A,B,C,D);
             markPoints(I,"I", true);
+            
+            // Value of the bottom will be available here and can be displayed over the canvas
+            ctx.beginPath();
+            // Drawing a rectangle in the middle of the canvas to display the value of the bottom, the rectangle will be on top of the canvas. The width of the rectangle will be the value of the bottom, so the rectangle will grow and shrink as the value of the bottom changes. Height is 10px.
+            ctx.rect(myCanvas.width/2, 0, I.bottom/100, 10);    
+            ctx.fill();        
 
             /* The window.requestAnimationFrame() method tells the browser that you wish to perform an animation and requests that the
             browser calls a specified function to update an animation right before the next repaint. The method takes a callback as
@@ -88,21 +100,27 @@
 
                 t = (Ay-Cy)(Dx-Cx) - (Dy-Cy)(Ax-Cx) / (Dy-Cy)(Bx-Ax) - (Dx-Cx)(By-Ay)
                 t = top / bottom
+
+                A-B is straight, so trying out other angles may break the system(bottom = 0). So, to make sure that the system works all the time.
             */
 
             const top = (A.y-C.y)*(D.x-C.x) - (D.y-C.y)*(A.x-C.x);
             const bottom = (D.y-C.y)*(B.x-A.x) - (D.x-C.x)*(B.y-A.y);
             const t = top/bottom;
-
+            //console.log("Checking if bottom is 0:\t", bottom);
             //linear interpolation is used to return the point of intersection(x,y), as A, B and t are available
-            return { x: lerp(A.x,B.x,t), y: lerp(A.y,B.y,t) };
+            return { 
+                x: lerp(A.x,B.x,t), 
+                y: lerp(A.y,B.y,t),
+                bottom 
+            };
         }
         
         function markPoints(point,label, isRed){
             // Marking the points
             ctx.beginPath();
             // Arc as a circle around the point to mark it, with radius - 10px, 
-            ctx.fillStyle=isRed?"red":"white";
+            ctx.fillStyle=isRed?"green":"white";
             ctx.arc(point.x, point.y, 10, 0, Math.PI*2);
             ctx.fill();
             ctx.stroke();
