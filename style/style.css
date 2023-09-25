@@ -1,9 +1,10 @@
 body{
     background-color: grey;
-    margin: 0px;
-    padding: 30%;
+    margin: 10em;
+    padding: 6em 12em;
     overflow: hidden;
 }
 #myCanvas{
-
+    padding: 2em;
+    margin: 2em;
 }

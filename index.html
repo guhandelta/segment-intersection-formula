@@ -20,25 +20,91 @@
 
         //Sketching the lines between the points
         const ctx = myCanvas.getContext('2d');
-        ctx.beginPath();
-        ctx.strokeStyle = 'white';
-        ctx.moveTo(A.x, A.y);
-        ctx.lineTo(B.x, B.y);
-        ctx.moveTo(C.x, C.y);
-        ctx.lineTo(D.x, D.y);
-        ctx.stroke();
 
-        markPoints(A,"A");
-        markPoints(B,"B");
-        markPoints(C,"C");
-        markPoints(D,"D");
+        let t=-1;
+        animate();
 
-        function markPoints(point,label){
+        function animate(){
+            ctx.clearRect(0,0,myCanvas.width,myCanvas.height);
+            
+            ctx.beginPath();
+            ctx.strokeStyle = 'white';
+            ctx.moveTo(A.x, A.y);
+            ctx.lineTo(B.x, B.y);
+            ctx.moveTo(C.x, C.y);
+            ctx.lineTo(D.x, D.y);
+            ctx.stroke();
+    
+            markPoints(A,"A");
+            markPoints(B,"B");
+            markPoints(C,"C");
+            markPoints(D,"D");
+    
+            
+            const M1 = { 
+                x: lerp(A.x, B.x, t),  // 50% or 1/2 or 0.5, means the midpoint of A and B
+                y: lerp(A.y, B.y, t) 
+            };
+            const M2 = { 
+                x: lerp(C.x, D.x, t),  // 50% or 1/2 or 0.5, means the midpoint of A and B
+                y: lerp(C.y, D.y, t) 
+            };
+            
+            // Calculating the mid-point of both the lines using interpolation
+            markPoints(M1,"M1", t<0||t>1);
+            markPoints(M2,"M2", t<0||t>1);
+            t+=0.005;
+
+            // Calculating the Intersection of the lines
+            const I = getIntersection(A,B,C,D);
+            markPoints(I,"I", true);
+
+            /* The window.requestAnimationFrame() method tells the browser that you wish to perform an animation and requests that the
+            browser calls a specified function to update an animation right before the next repaint. The method takes a callback as
+            an argument to be invoked before the repaint.  */
+            requestAnimationFrame(animate);
+        }
+
+        function lerp(A,B,t){ // A, B are points, t is the %
+            return A+(B-A)*t; // if t is 1, the midpoint is B, if t is 0.5 or half, the midpoint is half away from A
+        }
+
+        function getIntersection(A,B,C,D){
+            /*  The intersection points needs to satisfy these two equations on Linear Interpolation:
+                Ix = Ax + (Bx-Ax)t = Cx + (Dx-Cx)u
+                Iy = Ay + (By-Ay)t = Cy + (Dy-Cy)u
+                where t and u are the interpolation parameters, and 2 distinct var are used here as same t does not work as the lines may/do not have the same .
+                
+                Ax + (Bx-Ax)t = Cx + (Dx-Cx)u =>  (Ax-Cx) + (Bx-Ax)t = (Dx-Cx)u 
+                => [(Ax-Cx) + (Bx-Ax)t]/(Dx-Cx) = u : but there is a problem, as Dx-Cx might be 0
+                
+                Ay + (By-Ay)t = Cy + (Dy-Cy)u =>  (Ay-Cy) + (By-Ay)t = (Dy-Cy)u => *(Dx-Cx) 
+
+                => (Ay-Cy)(Dx-Cx) + (By-Ay)(Dx-Cx)t = (Dy-Cy)(Dx-Cx)u
+
+                => (Ay-Cy)(Dx-Cx) + (By-Ay)(Dx-Cx)t = (Dy-Cy)(Ax-Cx) + (Dy-Cy)(Bx-Ax)t |:| {ln:78} (Dx-Cx)u  = (Ax-Cx) + (Bx-Ax)t 
+                => (Ay-Cy)(Dx-Cx) - (Dy-Cy)(Ax-Cx) = (Dy-Cy)(Bx-Ax)t - (Dx-Cx)(By-Ay)t
+
+
+                t = (Ay-Cy)(Dx-Cx) - (Dy-Cy)(Ax-Cx) / (Dy-Cy)(Bx-Ax) - (Dx-Cx)(By-Ay)
+                t = top / bottom
+            */
+
+            const top = (A.y-C.y)*(D.x-C.x) - (D.y-C.y)*(A.x-C.x);
+            const bottom = (D.y-C.y)*(B.x-A.x) - (D.x-C.x)*(B.y-A.y);
+            const t = top/bottom;
+
+            //linear interpolation is used to return the point of intersection(x,y), as A, B and t are available
+            return { x: lerp(A.x,B.x,t), y: lerp(A.y,B.y,t) };
+        }
+        
+        function markPoints(point,label, isRed){
             // Marking the points
             ctx.beginPath();
-            // Arc as a circle around the point to mark it, with radius - 5px, 
+            // Arc as a circle around the point to mark it, with radius - 10px, 
+            ctx.fillStyle=isRed?"red":"white";
             ctx.arc(point.x, point.y, 10, 0, Math.PI*2);
-            ctx.fillStyle="white";
+            ctx.fill();
             ctx.stroke();
             ctx.fillStyle="black";
             ctx.textAlign = "center";
