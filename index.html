@@ -12,10 +12,40 @@
         myCanvas.height = window.innerHeight;
         myCanvas.width = window.innerWidth;
 
+        //Defining the points
         const A = { x: 200, y: 150 };
-        const B = { x: 1500, y: 250 };
+        const B = { x: 150, y: 250 };
         const C = { x: 50, y: 100 };
         const D = { x: 250, y: 200 };
+
+        //Sketching the lines between the points
+        const ctx = myCanvas.getContext('2d');
+        ctx.beginPath();
+        ctx.strokeStyle = 'white';
+        ctx.moveTo(A.x, A.y);
+        ctx.lineTo(B.x, B.y);
+        ctx.moveTo(C.x, C.y);
+        ctx.lineTo(D.x, D.y);
+        ctx.stroke();
+
+        markPoints(A,"A");
+        markPoints(B,"B");
+        markPoints(C,"C");
+        markPoints(D,"D");
+
+        function markPoints(point,label){
+            // Marking the points
+            ctx.beginPath();
+            // Arc as a circle around the point to mark it, with radius - 5px, 
+            ctx.arc(point.x, point.y, 10, 0, Math.PI*2);
+            ctx.fillStyle="white";
+            ctx.stroke();
+            ctx.fillStyle="black";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.font="bold 14px arial";
+            ctx.fillText(label, point.x, point.y);
+        }
     </script>
 </body>
 </html>
