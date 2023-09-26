@@ -30,7 +30,7 @@
             mouse.y = event.y;
         }
 
-        let t=50;
+        //let t=50;
         animate();
 
         function animate(){
@@ -63,13 +63,10 @@
 
             // Calculating the Intersection of the lines
             const I = getIntersection(A,B,C,D);
-            markPoints(I,"I", true);
-            
-            // Value of the bottom will be available here and can be displayed over the canvas
-            ctx.beginPath();
-            // Drawing a rectangle in the middle of the canvas to display the value of the bottom, the rectangle will be on top of the canvas. The width of the rectangle will be the value of the bottom, so the rectangle will grow and shrink as the value of the bottom changes. Height is 10px.
-            ctx.rect(myCanvas.width/2, 0, I.bottom/100, 10);    
-            ctx.fill();        
+            // If the segments are not intersecting, then there will be no I, and it will not be displayed
+            if(I){
+                markPoints(I,"I");      
+            }
 
             /* The window.requestAnimationFrame() method tells the browser that you wish to perform an animation and requests that the
             browser calls a specified function to update an animation right before the next repaint. The method takes a callback as
@@ -87,10 +84,11 @@
                 Iy = Ay + (By-Ay)t = Cy + (Dy-Cy)u
                 where t and u are the interpolation parameters, and 2 distinct var are used here as same t does not work as the lines may/do not have the same .
                 
-                Ax + (Bx-Ax)t = Cx + (Dx-Cx)u =>  (Ax-Cx) + (Bx-Ax)t = (Dx-Cx)u 
-                => [(Ax-Cx) + (Bx-Ax)t]/(Dx-Cx) = u : but there is a problem, as Dx-Cx might be 0
+                Ax + (Bx-Ax)t = Cx + (Dx-Cx)u =>  
+                    (Ax-Cx) + (Bx-Ax)t = (Dx-Cx)u 
                 
-                Ay + (By-Ay)t = Cy + (Dy-Cy)u =>  (Ay-Cy) + (By-Ay)t = (Dy-Cy)u => *(Dx-Cx) 
+                Ay + (By-Ay)t = Cy + (Dy-Cy)u =>  
+                    (Ay-Cy) + (By-Ay)t = (Dy-Cy)u => *(Dx-Cx) 
 
                 => (Ay-Cy)(Dx-Cx) + (By-Ay)(Dx-Cx)t = (Dy-Cy)(Dx-Cx)u
 
@@ -102,18 +100,32 @@
                 t = top / bottom
 
                 A-B is straight, so trying out other angles may break the system(bottom = 0). So, to make sure that the system works all the time.
+
+                similarly (Bx-Ax)t = (Cx-Ax) + (Dx-Cx)u
+                Ay + (By-Ay)t = Cy + (Dy-Cy)u
+                
             */
 
-            const top = (A.y-C.y)*(D.x-C.x) - (D.y-C.y)*(A.x-C.x);
+            const tTop = (A.y-C.y)*(D.x-C.x) - (D.y-C.y)*(A.x-C.x);
+            const uTop = (C.y-A.y)*(A.x-B.x) - (A.y-B.y)*(C.x-A.x);
             const bottom = (D.y-C.y)*(B.x-A.x) - (D.x-C.x)*(B.y-A.y);
-            const t = top/bottom;
-            //console.log("Checking if bottom is 0:\t", bottom);
-            //linear interpolation is used to return the point of intersection(x,y), as A, B and t are available
-            return { 
-                x: lerp(A.x,B.x,t), 
-                y: lerp(A.y,B.y,t),
-                bottom 
-            };
+
+            if(bottom != 0 ){
+                const t = tTop/bottom;
+                const u = uTop/bottom;
+                // The intersection point will be visible only within the line segment
+                if(t>=0 && t<=1 && u>=0 && u<=1){
+                    //linear interpolation is used to return the point of intersection(x,y), as A, B and t are available
+                    return { 
+                        x: lerp(A.x,B.x,t), 
+                        y: lerp(A.y,B.y,t),
+                        offset: t // Just to find the distance between the car and object detected
+                    };
+                }
+            }
+
+            // If in case bottom = 0
+            return null;
         }
         
         function markPoints(point,label, isRed){
